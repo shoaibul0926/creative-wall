@@ -10,11 +10,10 @@
   html, body { margin:0; height:100%; background:var(--bg); color:var(--ink);
          font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; overflow:hidden; }
   .wall { display:flex; width:100vw; height:100vh; }
-  .slot { position:relative; flex:1 1 50%; height:100%; border:2px solid var(--line); }
-  .slot iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
-  .name { position:absolute; top:16px; left:20px; padding:6px 14px;
-          font-weight:600; font-size:16px; background:rgba(11,15,26,0.55);
-          border-radius:999px; backdrop-filter:blur(4px); pointer-events:none; z-index:1; }
+  .slot { display:flex; flex-direction:column; flex:1 1 50%; height:100%; padding:16px; }
+  .name { flex:0 0 auto; padding:10px 0; font-weight:600; font-size:16px; text-align:center; }
+  .frame { position:relative; flex:1 1 auto; border:2px solid var(--line); border-radius:8px; overflow:hidden; }
+  .frame iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
 
   @media (max-width: 800px) {
     .wall { flex-direction:column; }
@@ -26,11 +25,11 @@
   <main class="wall">
     <div class="slot">
       <div class="name">Shoaibul</div>
-      <iframe src="pieces/shoaibul/art.html" loading="lazy" title="Shoaibul"></iframe>
+      <div class="frame"><iframe src="pieces/shoaibul/art.html" loading="lazy" title="Shoaibul"></iframe></div>
     </div>
     <div class="slot">
       <div class="name">Sahil</div>
-      <iframe src="pieces/sahil/art.html" loading="lazy" title="Sahil"></iframe>
+      <div class="frame"><iframe src="pieces/sahil/art.html" loading="lazy" title="Sahil"></iframe></div>
     </div>
   </main>
 </body>
