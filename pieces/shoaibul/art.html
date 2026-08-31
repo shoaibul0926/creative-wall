@@ -6,19 +6,189 @@
 <title>My art</title>
 <style>
   html, body { margin: 0; height: 100%; background: #0b0f1a; overflow: hidden; }
+  canvas { display: block; width: 100%; height: 100%; }
 </style>
 </head>
 <body>
-<!-- ============================================================
-     THIS IS YOUR BLANK SLOT.  Paint it however you like.
+<canvas id="c"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H, DPR;
 
-     Open Claude Code in this project and describe what you want here, e.g.:
-        "make colorful fireworks that explode"
-        "make a swirling rainbow spiral"
-        "make glowing particles that follow my mouse"
+function resize() {
+  DPR = window.devicePixelRatio || 1;
+  W = canvas.clientWidth;
+  H = canvas.clientHeight;
+  canvas.width = W * DPR;
+  canvas.height = H * DPR;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+window.addEventListener('resize', resize);
+resize();
 
-     Save, refresh, and make it yours.
-     When you love it:  git pull -> git add . -> git commit -> git push
-     ============================================================ -->
+// Stars
+const stars = Array.from({ length: 140 }, () => ({
+  x: Math.random(),
+  y: Math.random() * 0.7,
+  r: Math.random() * 1.4 + 0.3,
+  phase: Math.random() * Math.PI * 2,
+  speed: Math.random() * 1.5 + 0.5
+}));
+
+// Clouds (soft blobs made of overlapping circles), drifting sideways at different speeds/heights
+function makeCloud(yFrac, scale, speed, opacity) {
+  const puffs = [];
+  const n = 5 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < n; i++) {
+    puffs.push({
+      dx: (i - n / 2) * 28 * scale + (Math.random() - 0.5) * 10,
+      dy: (Math.random() - 0.5) * 12 * scale,
+      r: (18 + Math.random() * 16) * scale
+    });
+  }
+  return { x: Math.random(), yFrac, scale, speed, opacity, puffs };
+}
+const clouds = [
+  makeCloud(0.18, 1.4, 0.010, 0.55),
+  makeCloud(0.28, 1.0, 0.017, 0.45),
+  makeCloud(0.12, 0.8, 0.024, 0.35),
+  makeCloud(0.35, 1.2, 0.013, 0.4)
+];
+
+// Shooting star state
+let shooting = null;
+function maybeSpawnShootingStar() {
+  if (!shooting && Math.random() < 0.004) {
+    shooting = {
+      x: Math.random() * W * 0.6,
+      y: Math.random() * H * 0.3,
+      vx: 6 + Math.random() * 4,
+      vy: 3 + Math.random() * 2,
+      life: 0,
+      maxLife: 40 + Math.random() * 20
+    };
+  }
+}
+
+// Moon glow
+const moon = { xFrac: 0.78, yFrac: 0.22, r: 34 };
+
+function drawSky(t) {
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#060a16');
+  grad.addColorStop(0.55, '#0b1330');
+  grad.addColorStop(1, '#141b3a');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function drawMoon() {
+  const mx = moon.xFrac * W;
+  const my = moon.yFrac * H;
+  const glow = ctx.createRadialGradient(mx, my, moon.r * 0.3, mx, my, moon.r * 6);
+  glow.addColorStop(0, 'rgba(255, 250, 220, 0.35)');
+  glow.addColorStop(1, 'rgba(255, 250, 220, 0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(mx, my, moon.r * 6, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(mx, my, moon.r, 0, Math.PI * 2);
+  ctx.fillStyle = '#fdf6e3';
+  ctx.shadowColor = 'rgba(255,250,220,0.8)';
+  ctx.shadowBlur = 20;
+  ctx.fill();
+  // craters
+  ctx.globalAlpha = 0.15;
+  ctx.fillStyle = '#b8a97a';
+  [[-8, -6, 6], [10, 4, 5], [-2, 10, 4]].forEach(([dx, dy, r]) => {
+    ctx.beginPath();
+    ctx.arc(mx + dx, my + dy, r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+function drawStars(t) {
+  stars.forEach(s => {
+    const twinkle = 0.5 + 0.5 * Math.sin(t * 0.001 * s.speed + s.phase);
+    ctx.beginPath();
+    ctx.fillStyle = `rgba(255,255,255,${0.3 + twinkle * 0.7})`;
+    ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+function drawCloud(cloud) {
+  const cx = cloud.x * W;
+  const cy = cloud.yFrac * H;
+  ctx.save();
+  ctx.globalAlpha = cloud.opacity;
+  ctx.fillStyle = '#c9d3f0';
+  cloud.puffs.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(cx + p.dx, cy + p.dy, p.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+function updateClouds() {
+  clouds.forEach(c => {
+    c.x += c.speed / W;
+    if (c.x > 1.4) c.x = -0.4;
+  });
+}
+
+function drawShootingStar() {
+  if (!shooting) return;
+  shooting.x += shooting.vx;
+  shooting.y += shooting.vy;
+  shooting.life++;
+  const alpha = 1 - shooting.life / shooting.maxLife;
+  ctx.save();
+  ctx.strokeStyle = `rgba(255,255,255,${Math.max(alpha, 0)})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(shooting.x, shooting.y);
+  ctx.lineTo(shooting.x - shooting.vx * 6, shooting.y - shooting.vy * 6);
+  ctx.stroke();
+  ctx.restore();
+  if (shooting.life > shooting.maxLife || shooting.x > W || shooting.y > H) {
+    shooting = null;
+  }
+}
+
+// Gentle hills silhouette at the bottom
+function drawHills() {
+  ctx.fillStyle = '#0a0e1e';
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  ctx.lineTo(0, H * 0.86);
+  for (let x = 0; x <= W; x += 40) {
+    const y = H * 0.86 + Math.sin(x * 0.006) * 14;
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(W, H);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function frame(t) {
+  drawSky(t);
+  drawStars(t);
+  drawMoon();
+  updateClouds();
+  clouds.forEach(drawCloud);
+  maybeSpawnShootingStar();
+  drawShootingStar();
+  drawHills();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
 </body>
 </html>
