@@ -5,14 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Wall</title>
 <style>
-  :root { --bg:#0b0f1a; --ink:#e8ecf6; --line:#26304d; }
+  :root { --bg:#0b0f1a; --card:#121829; --ink:#e8ecf6; --line:#26304d; }
   * { box-sizing: border-box; }
   html, body { margin:0; height:100%; background:var(--bg); color:var(--ink);
          font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; overflow:hidden; }
   .wall { display:flex; width:100vw; height:100vh; }
   .slot { display:flex; flex-direction:column; flex:1 1 50%; height:100%; padding:16px; }
-  .name { flex:0 0 auto; padding:10px 0; font-weight:600; font-size:16px; text-align:center; }
-  .frame { position:relative; flex:1 1 auto; border:2px solid var(--line); border-radius:8px; overflow:hidden; }
+  .card { display:flex; flex-direction:column; flex:1 1 auto; border:2px solid var(--line);
+          border-radius:8px; overflow:hidden; }
+  .name { flex:0 0 auto; padding:10px 0; font-weight:600; font-size:16px; text-align:center;
+          background:var(--card); border-bottom:2px solid var(--line); }
+  .frame { position:relative; flex:1 1 auto; }
   .frame iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
 
   @media (max-width: 800px) {
@@ -24,12 +27,16 @@
 <body>
   <main class="wall">
     <div class="slot">
-      <div class="name">Shoaibul</div>
-      <div class="frame"><iframe src="pieces/shoaibul/art.html" loading="lazy" title="Shoaibul"></iframe></div>
+      <div class="card">
+        <div class="name">Shoaibul</div>
+        <div class="frame"><iframe src="pieces/shoaibul/art.html" loading="lazy" title="Shoaibul"></iframe></div>
+      </div>
     </div>
     <div class="slot">
-      <div class="name">Sahil</div>
-      <div class="frame"><iframe src="pieces/sahil/art.html" loading="lazy" title="Sahil"></iframe></div>
+      <div class="card">
+        <div class="name">Sahil</div>
+        <div class="frame"><iframe src="pieces/sahil/art.html" loading="lazy" title="Sahil"></iframe></div>
+      </div>
     </div>
   </main>
 </body>
