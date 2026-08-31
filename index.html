@@ -39,5 +39,40 @@
       </div>
     </div>
   </main>
+  <script>
+    // Soft entry chime, synthesized (no audio file needed).
+    // Browsers block autoplaying sound until the visitor interacts, so we
+    // play it on their very first click/tap/key press on the page.
+    function playEntryChime() {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      const ctx = new Ctx();
+      const now = ctx.currentTime;
+      const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        const start = now + i * 0.09;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.15, start + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.9);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.9);
+      });
+    }
+    let played = false;
+    function onFirstEntry() {
+      if (played) return;
+      played = true;
+      playEntryChime();
+      window.removeEventListener('pointerdown', onFirstEntry);
+      window.removeEventListener('keydown', onFirstEntry);
+    }
+    window.addEventListener('pointerdown', onFirstEntry);
+    window.addEventListener('keydown', onFirstEntry);
+  </script>
 </body>
 </html>
